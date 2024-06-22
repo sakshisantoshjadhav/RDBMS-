@@ -1,0 +1,97 @@
+Consider the following database 
+Student (Roll_No int, Sname varchar (20), Sclass char (10)) 
+Teacher (T_No int, Tname char (20), Experience int) 
+The Student and Teacher are related with many to many relationship with the descriptive 
+attribute Subject. 
+
+
+create table student(rollno int primary key,sname varchar(20),sclass varchar(20));
+
+create table teacher(t_no int primary key,t_name varchar(20),Experience int);
+
+create table st(rollno int references student,tno int references teacher,subject varchar(20));
+
+insert into student values(101,'om','fy');
+insert into student values(102,'sai','fy');
+insert into student values(103,'ram','sy');
+
+insert into teacher values(01,'mr.joshi',5);
+insert into teacher values(02,'mr.navle',6);
+insert into teacher values(03,'mr.joshi',7);
+
+insert into st values(101,01,'ds');
+insert into st values(102,02,'php');
+insert into st values(103,01,'rdbms');
+
+select * from student;
+select * from teacher;
+select * from st;
+
+
+a)Write a trigger before inserting the teacher record into a teacher 
+table. Experience should be a minimum of 4 years. If it is less than 4 
+years trigger gets fired and displays an appropriate message.
+
+create or replace function teach()returns trigger as
+$$
+declare
+begin
+if (new.experience<4)then 
+raise exception'experience less than 4 not allowed..';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+
+create trigger s1
+before insert on teacher
+for each row execute procedure teach();
+
+
+b). Write a cursor to accept the student name from the user as an input
+and give list of subjects taken by the student.
+
+
+create or replace function stud(sname1 student.sname%type)returns void as
+$$
+declare
+r1 st.subject%type;
+c1 cursor for select subject from student,st where student.rollno=st.rollno and sname1=sname;
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'subject=%',r1;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+c). Write a stored function to find the details of the maximum
+experienced teacher.
+
+create or replace function max1()returns int as
+$$
+declare
+r1 teacher%rowtype;
+begin
+select min(experience)into r1 from teacher;
+raise notice'tno=%',r1.t_no;
+raise notice'tname=%',r1.t_name;
+raise notice'experience=%',r1.experience;
+end;
+$$
+language plpgsql;
+
+
+
+
+
+
+
+
+
+
