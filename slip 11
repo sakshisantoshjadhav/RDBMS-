@@ -1,0 +1,104 @@
+Consider the following database: 
+Car (c_no int, owner varchar(20), model varchar(10), color varchar(10) 
+Driver (driver_no int, driver_name varchar(20), license_no int, d_age int, salary float) 
+Car and Driver are related with many to many relationship 
+
+
+create table car(c_no int primary key,owner varchar(20),model varchar(10), color varchar(10));
+
+create table driver(driver_no int primary key,driver_name varchar(20),license_no int, d_age int,salary float) ;
+
+create table cd(c_no int references car,driver_no int references driver);
+
+insert into car values(1,'sakshi','alto','black');
+insert into car values(2,'shreya','bullet','red');
+insert into car values(3,'rohini','thar','white');
+insert into car values(4,'shraddha','safari','black');
+insert into car values(5,'anjali','suzuki','white');
+select * from car;
+
+insert into driver values(101,'sarthak',2009,19,50000);
+insert into driver values(102,'devesh',2008,20,60000);
+insert into driver values(103,'harish',2007,21,70000);
+insert into driver values(104,'atharv',2006,22,80000);
+insert into driver values(105,'sumit',2005,23,90000);
+select * from driver;
+
+insert into cd values(1,101);
+insert into cd values(2,102);
+insert into cd values(3,103);
+insert into cd values(4,104);
+insert into cd values(5,105);
+select * from cd;
+
+
+a)Write a function which accepts the model name and prints all 
+cars of that model.
+
+create or replace function dispp(model1 car.model%type)returns void as
+$$
+declare
+r1 car%rowtype;
+begin
+select * into r1 from car where model1=model;
+raise notice'car no=%',r1.c_no;
+raise notice'owner=%',r1.owner;
+raise notice'model=%',r1.model;
+raise notice'color=%',r1.color;
+end;
+$$
+language plpgsql;
+
+b). Write a trigger before insert/update on Driver. Raise 
+exception if driver age is < 21.
+
+
+create or replace function disp_driver3()returns trigger as
+$$
+declare
+begin
+if (new.d_age<=21) then
+raise exception'age less then 21 not allowed';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+
+create trigger t6
+before insert or update on driver
+for each row execute procedure disp_driver3();
+
+c). Write a cursor which accepts the driver name and prints the 
+details of all cars that this driver has driven, if the driver 
+name is invalid, print an appropriate message.
+
+create or replace function disp_d(dname1 driver.driver_name%type)returns void as
+$$
+declare
+r1 car%rowtype;
+c1 cursor for select car.* from car,driver,cd where car.c_no=cd.c_no and driver.driver_no=cd.driver_no and dname1=driver_name;
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'car no=%',r1.c_no;
+raise notice'owner=%',r1.owner;
+raise notice'model=%',r1.model;
+raise notice'color=%',r1.color;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+
+
+
+
+
+
+
+
+
