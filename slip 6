@@ -1,0 +1,82 @@
+Consider the following Customer- Account database. 
+Customer (cno integer, cname varchar(20), city varchar(20)) 
+Account (accno integer, acc_type varchar(10), opening_date date, balance money) 
+Customer and Account are related with a one to many relationship 
+
+
+
+create table customer(cno int primary key,cname varchar(20),city varchar(20));
+
+create table account(a_no int,a_type varchar(20),opening_date date,balance money,cno int references customer);
+
+insert into customer values(1,'sakshi','pune');
+insert into customer values(2,'gayatri','mumbai');
+insert into customer values(3,'rohini','nashik');
+insert into customer values(4,'sarita','delhi');
+insert into customer values(5,'kajal','surat');
+select * from customer;
+
+insert into account values(101,'saving','2024-12-2','5000',1);
+insert into account values(102,'current','2023-11-3','6000',2);
+insert into account values(103,'saving','2024-4-5','7000',3);
+insert into account values(104,'current','2024-7-9','8000',4);
+insert into account values(105,'saving','2024-11-8','9000',5);
+select * from account;
+
+a)Write a function to accept account type as input and give the 
+maximum account balance of that type. 
+
+create or replace function disp_account(a_type1 account.a_type%type)returns int as
+$$
+declare
+max int;
+begin
+select max(balance) from account;
+return max;
+end;
+$$
+language plpgsql;
+
+
+b). Write a cursor to display account details of all customers of 
+“Pune” city. 
+
+create or replace function disp_sakshi()returns void as
+$$
+declare
+r1 account%rowtype;
+c1 cursor for select account.* from account,customer where account.cno=customer.cno and city='pune';
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'ano=%',r1.a_no;
+raise notice'atype=%',r1.a_type;
+raise notice'openingdate=%',r1.opening_date;
+raise notice'balance=%',r1.balance;
+end loop;
+close c1;
+end;
+$$ 
+language plpgsql;
+
+
+c). Write a trigger before inserting an account record in Account 
+table and raise exception if balance is <500. 
+
+create or replace function disp34()returns trigger as
+$$
+declare
+begin
+if new.balance<'500' then
+raise exception'balance is <500 not allowed..';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+
+create trigger q1
+before insert on account 
+for each row execute procedure disp34();
