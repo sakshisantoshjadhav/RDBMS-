@@ -1,0 +1,87 @@
+Consider the following Item-Supplier database 
+Item(itemno integer, itemname varchar(20)) 
+Supplier(supplier_no integer, supplier_name varchar(20), city varchar(20)) 
+Item-Supplier: M-M relationship with rate(money) and quantity (integer) as descriptive attributes. 
+
+create table item(ino int primary key,iname varchar(20));
+
+insert into item values(101,'pen');
+insert into item values(102,'pencil');
+insert into item values(103,'notebook');
+insert into item values(104,'ink');
+insert into item values(105,'book');
+
+create table supplier(sno int primary key,sname varchar(20),addr varchar(20),city varchar(20));
+
+insert into supplier values(201,'om','pune');
+insert into supplier values(202,'sai','shirdi');
+insert into supplier values(203,'ram','shrirampur');
+insert into supplier values(204,'sham','mumbai');
+insert into supplier values(205,'sunder','nager');
+
+create table item_sup(ino int references item,sno int references supplier,rate int,quantity int);
+
+insert into item_sup values(101,201,3000,10);
+insert into item_sup values(102,202,2000,20);
+insert into item_sup values(102,203,4000,5);
+insert into item_sup values(103,204,3500,15);
+insert into item_sup values(104,204,2200,13);
+insert into item_sup values(105,205,2700,26);
+
+select * from item;
+select * from supplier;
+select * from item_sup;
+
+a)Write a function to accept the city name as input and returns the 
+number of suppliers living in that city.
+
+create or replace function disp13(cname supplier.addr%type)returns int as
+$$
+declare
+cnt int;
+begin
+select count(*) into cnt from supplier where cname=addr;
+return cnt;
+end;
+$$
+language plpgsql;
+
+b) Write a cursor to display the names of items whose rate is more 
+than 500.
+
+create or replace function disp21() returns void as
+$$
+declare
+r1 item.iname%type;
+c1 cursor for select iname from item,item_sup where item.ino=item_sup.ino and rate>'3500';
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'itemname=%',r1;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+c). Write a trigger before insert or update on rate field. If the rate is 
+less than 50 then raise the appropriate exception.
+
+create or replace function disp10()returns trigger as
+$$
+declare
+begin
+if (new.rate<50) then
+raise exception'rate less then 50 not allowed...';
+end if;
+end;
+$$
+language plpgsql;
+
+create trigger t3
+before insert or update on item_sup
+for each row execute procedure disp10();
+
+
