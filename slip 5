@@ -1,0 +1,89 @@
+Consider the followingr Department-employee database. 
+Department (dno integer, dname varchar(20),city varchar(20)) 
+Employee (eno integer, ename varchar(20), salary money) 
+Department and Employee are related with a one to many relationship 
+
+create table Department(dno int primary key, dname varchar(20),city varchar(20)); 
+
+create table Employee(eno int,ename varchar(20),salary money,dno int references department);
+
+insert into department values(1,'chemistry','pune');
+insert into department values(2,'computer','mumbai');
+insert into department values(3,'math','nashik');
+insert into department values(4,'english','delhi');
+insert into department values(5,'science','nagpur');
+select * from department;
+
+insert into employee values(101,'sakshi',50000,1);
+insert into employee values(102,'santosh',60000,2);
+insert into employee values(103,'rohini',70000,3);
+insert into employee values(104,'radhika',90000,4);
+insert into employee values(105,'ragini',80000,5);
+select * from employee;
+
+a) Write a function to accept department city as input and returns 
+the total number of departments in that city. 
+
+create or replace function disp_depart(dcity department.city%type)returns int as
+$$
+declare
+cnt int;
+begin
+select count(*) into cnt from department where dcity=city;
+return cnt;
+end;
+$$
+language plpgsql;
+
+
+b). Write a cursor to display the department-wise names of 
+employees whose salary is between 50000 and 70000. 
+
+create or replace function dispp2()returns void as
+$$
+declare
+r1 employee.ename%type;
+c1 cursor for select employee.ename from employee,department where employee.dno=department.dno and salary<='50000' and  salary>='70000' group by dname;
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'ename=%',r1;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+
+
+
+c) Write a trigger before inserting an employee record in the 
+Employee table. Raise an exception if salary < 0. 
+
+
+create or replace function disp_employee()returns trigger as
+$$
+declare
+begin
+if new.salary<'0' then
+raise exception'salary less than 0 not allowed..';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+
+create trigger t9
+before insert on employee
+for each row execute procedure disp_employee();
+
+
+
+
+
+
+
+
+
