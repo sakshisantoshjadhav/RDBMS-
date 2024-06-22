@@ -1,0 +1,85 @@
+Consider the following database 
+Movie (m_name varchar (25), release_year integer, budget money) 
+Actor (a_name varchar(30), role varchar(30), charges money, a_address varchar(30) ) 
+Movie and Actor are related with many to many relationship. 
+
+create table movie(m_name varchar(20) primary key,release_year int,budget int);
+
+create table actor(a_name varchar(20) primary key,role varchar(20),charges money,a_address varchar(20));
+
+create table MA(m_name varchar(20) references movie,a_name varchar(20) references actor);
+
+insert into movie values('sairat',2015,'450');
+insert into movie values('tanaji',2016,'550');
+insert into movie values('12th fail',2024,'650');
+insert into movie values('genius',2018,'700');
+insert into movie values('jadu',2014,'230');
+select * from movie;
+
+insert into actor values('prashant','hero','500','pune');
+insert into actor values('shalini','heroine','600','mumbai');
+insert into actor values('dev','hero','700','delhi');
+insert into actor values('sarthak','hero','800','nashik');
+insert into actor values('sakshi','heroine','900','kolhapur');
+select * from actor;
+
+insert into MA values('sairat','prashant');
+insert into MA values('tanaji','shalini');
+insert into MA values('12th fail','dev');
+insert into MA values('genius','sarthak');
+insert into MA values('jadu','sakshi');
+select * from MA;
+
+
+a)Write a trigger which will be executed whenever an actor is 
+deleted from the actor table, display appropriate message.
+
+create or replace function disp_actor()returns trigger as
+$$
+declare
+begin
+raise exception'actor deleted from a actor table';
+end;
+$$
+language plpgsql;
+
+create trigger t1
+before delete on actor
+for each row execute procedure disp_actor(); 
+
+b)Write a function using cursor, which will accept the actor name 
+and print the names of all movies in which that actor has acted. 
+
+create or replace function disp_actor(actorname actor.a_name%type)returns void as
+$$
+declare
+t_name movie.m_name%type;
+c1 cursor for select movie.m_name from movie,actor,MA where movie.m_name=MA.m_name and actor.a_name=MA.a_name and actorname=actor.a_name;
+begin
+open c1;
+loop
+fetch c1 into t_name;
+exit when not found;
+raise notice'movie name=%',t_name;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+
+c)Write a function which will accept the movie name as input and 
+prints its release year and budget. 
+
+create or replace function disp_movi1(moviename movie.m_name%type)returns void as
+$$
+declare
+r1 movie.release_year%type;
+r2 movie.budget%type;
+begin
+select movie.release_year,movie.budget into r1,r2 from movie where moviename=movie.m_name;
+raise notice'release year=%',r1;
+raise notice'budget=%',r2;
+end;
+$$
+language plpgsql;
