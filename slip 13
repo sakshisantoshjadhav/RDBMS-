@@ -1,0 +1,95 @@
+Consider the following database 
+Project (pno int, pname char (30), ptype char (20), duration int) 
+Employee (empno int, ename char (20), joining_date date) 
+The relationship between Project and Employee is many to many with descriptive attribute 
+start_date. 
+
+create table project(pno int primary key,pname varchar(20),ptype varchar(20),duration int);
+
+create table employee(eno int primary key,ename varchar(20),qualification varchar(15),salary float, joining_date date);
+
+create table PE(pno int references project,eno int references employee,start_date date,no_of_hours int);
+
+insert into project values(111,'danish','eduacational',-3);
+insert into project values(102,'satish','system',5);
+insert into project values(103,'alok','robotics',4);
+insert into project values(104,'amol','networks',2);
+insert into project values(105,'database','industrial',1);
+
+insert into employee values(1000,'danish','mcs',50000,'2011-11-21');
+insert into employee values(1500,'satish','mca',60000,'2010-01-01');
+insert into employee values(2000,'amol','bcs',70000,'2012-06-01');
+insert into employee values(2500,'amok','mcs',80000,'2013-02-01');
+insert into employee values(3000,'nitesh','mca',90000,'2016-10-21');
+
+insert into PE values(101,1000,'2014-01-21',500);
+insert into PE values(102,1500,'2010-01-01',100);
+insert into PE values(103,2000,'2012-06-01',200);
+insert into PE values(104,3000,'2013-02-02',300);
+insert into PE values(105,4000,'2014-09-05',400);
+
+select * from project;
+select * from employee;
+select * from PE;
+
+
+a). Write a stored function to accept project type as an input and display 
+all project names of that type. Raise an exception if the type is 
+invalid. 
+
+create or replace function disp1(ptype1 project.ptype%type)returns void as
+$$
+declare
+t_name project.pname%type;
+begin
+select pname into t_name from project where ptype1=ptype;
+raise notice'pname=%',t_name;
+end;
+$$
+language plpgsql;
+
+b. Write a trigger which will get fired before insert/update on project 
+table which will check the duration > 0. Display appropriate 
+message. 
+
+create or replace function disp_project1() returns trigger as
+$$
+declare 
+begin
+if new.duration<='0' then
+raise exception 'duaration less than zero not allowed.....';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+
+create trigger t3
+before insert or update on project
+for each row execute procedure disp_project1();
+
+c). Write a cursor to accept the project name as an input parameter from 
+the user and display the names of employees working on that 
+project. 
+
+create or replace function disp1(pname1 project.pname%type) returns void as
+$$
+declare
+t_name employee.ename%type;
+c1 cursor for select employee.ename from employee,project,pe where employee.eno=pe.eno and project.pno=pe.pno and pname1=pname;
+begin
+open c1;
+loop
+fetch c1 into t_name;
+exit when not found;
+raise notice'emp name=%',t_name;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+
+
+
+
