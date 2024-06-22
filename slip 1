@@ -1,0 +1,88 @@
+Consider the following database
+Doctor (d_no int, d_name varchar(30), specialization varchar(35), charges int) 
+Hospital (h_no int, h_name varchar(20), city varchar(10))
+Doctor and Hospital are related with many to one relationship.
+
+create table hospital(h_no int primary key,h_name varchar(20),city varchar(20));
+
+create table doctor(d_no int primary key,d_name varchar(20),specialization varchar(20),charges int,h_no int references hospital);
+
+insert into hospital values(1,'mauli','pune');
+insert into hospital values(2,'vithhai','mumbai');
+insert into hospital values(3,'sai','nashik');
+insert into hospital values(4,'aadarsh','sambhajinagar');
+insert into hospital values(5,'parsad','delhi');
+select * from hospital;
+
+insert into doctor values(101,'sushant','MBBS',200,1);
+insert into doctor values(102,'suraj','BHMS',100,2);
+insert into doctor values(103,'amit','BAMS',300,3);
+insert into doctor values(104,'sarthak','SURGON',500,4);
+insert into doctor values(105,'devesh','MBBS',400,5);
+select * from doctor;
+
+a)Write a trigger before insert/update on Doctor table. Raise 
+exception if charges are <0 
+create or replace function disp_doctor1() returns trigger as
+$$
+declare 
+begin
+if new.charges<0 then
+raise exception'charges is less than zero not allowed';
+end if;
+return new;
+end;
+$$
+language plpgsql;
+create trigger t2
+before insert or update on doctor
+for each row execute procedure disp_doctor();
+
+b)Write a function which will accept the name of the doctor and 
+print the hospital details that the doctor is visiting. 
+
+create or replace function disp_doctor(dname doctor.d_name%type) returns void as
+$$
+declare
+r1 hospital%rowtype;
+ select hospital.* from hospital,doctor where hospital.h_no=doctor.h_no
+and dname=d_name;
+begin
+open c1;
+loop
+fetch c1 into r1;
+exit when not found;
+raise notice'hospital no=%',r1.h_no;
+raise notice'hospital name=%',r1.h_name;
+raise notice'hospital city=%',r1.city;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+c)Write a function using cursor to accept the city name and print 
+the names of all hospitals in that city. 
+create or replace function disp_hospital1(city1 hospital.city%type)returns void as
+$$
+declare
+t_name hospital.h_name%type;
+c1 cursor for select h_name from hospital where city1=city;
+begin
+open c1;
+loop
+fetch c1 into t_name;
+exit when not found;
+raise notice'hospitalname=%',t_name;
+end loop;
+close c1;
+end;
+$$
+language plpgsql;
+
+
+
+
+
+
+
